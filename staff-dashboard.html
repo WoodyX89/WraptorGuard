@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff Dashboard - WraptorGuard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  
+  <style>
+    .logo-green { color: #00A651; }
+    body { font-family: system-ui, sans-serif; }
+
+    .hamburger span {
+      transition: all 0.3s ease;
+    }
+    .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .hamburger.active span:nth-child(2) { opacity: 0; }
+    .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(7px, -6px); }
+
+    .metric-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .metric-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+    }
+
+    .period-btn {
+      transition: all 0.2s ease;
+    }
+    .period-btn.active {
+      background-color: #00A651;
+      color: black;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body class="bg-zinc-950 text-white min-h-screen">
+
+  <!-- Navbar -->
+  <nav class="bg-black border-b border-green-600 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img src="images/logo2.png" alt="WraptorGuard Logo" class="h-16 w-auto md:h-24">
+          <div>
+            <span class="text-2xl md:text-3xl font-black tracking-tighter logo-green">WRAPTOR</span>
+            <span class="text-2xl md:text-3xl font-black tracking-tighter">GUARD</span>
+          </div>
+        </div>
+
+        <div class="hidden md:flex gap-8 text-lg">
+          <a href="staff-dashboard.html" class="text-green-400 font-semibold">Dashboard</a>
+          <a href="job-calculator.html" class="hover:text-green-400 transition">Calculator</a>
+          <a href="saved-quotes.html" class="hover:text-green-400 transition">Quotes</a>
+          <a href="pricing-settings.html" class="hover:text-green-400 transition">Pricing</a>
+        </div>
+
+        <button id="logout-btn" class="hidden md:block bg-red-600 hover:bg-red-500 px-6 py-3 rounded-2xl font-semibold transition">
+          Logout
+        </button>
+
+        <button id="mobile-menu-button" class="md:hidden hamburger flex flex-col justify-center gap-1.5 w-10 h-10">
+          <span class="block h-0.5 w-8 bg-white"></span>
+          <span class="block h-0.5 w-8 bg-white"></span>
+          <span class="block h-0.5 w-8 bg-white"></span>
+        </button>
+      </div>
+
+      <div id="mobile-menu" class="hidden md:hidden mt-4 py-6 border-t border-green-900">
+        <div class="flex flex-col gap-6 text-xl">
+          <a href="staff-dashboard.html" class="text-green-400 font-semibold py-2">Dashboard</a>
+          <a href="job-calculator.html" class="hover:text-green-400 transition py-2">Job Calculator</a>
+          <a href="saved-quotes.html" class="hover:text-green-400 transition py-2">Saved Quotes</a>
+          <a href="pricing-settings.html" class="hover:text-green-400 transition py-2">Pricing</a>
+          <button id="mobile-logout-btn" class="mt-6 bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-semibold text-center">Logout</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4">
+      <h1 class="text-4xl sm:text-5xl font-bold">Welcome Back</h1>
+      <div id="user-greeting" class="text-zinc-400"></div>
+    </div>
+
+    <!-- Period Selector -->
+    <div class="flex justify-center mb-10">
+      <div class="bg-zinc-900 rounded-3xl p-1.5 inline-flex shadow-inner">
+        <button data-period="day"   class="period-btn active px-6 py-3 rounded-3xl text-sm font-medium">Day</button>
+        <button data-period="month" class="period-btn px-6 py-3 rounded-3xl text-sm font-medium">Month</button>
+        <button data-period="year"  class="period-btn px-6 py-3 rounded-3xl text-sm font-medium">Year</button>
+      </div>
+    </div>
+
+    <!-- Overall Totals -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
+      <div class="bg-zinc-900 rounded-3xl p-8 metric-card">
+        <h3 class="text-xl font-semibold mb-2">Total Saved Quotes</h3>
+        <p class="text-6xl font-black text-green-400" id="total-quotes">0</p>
+      </div>
+      <div class="bg-zinc-900 rounded-3xl p-8 metric-card">
+        <h3 class="text-xl font-semibold mb-2">Total Revenue</h3>
+        <p class="text-6xl font-black text-green-400" id="total-revenue">$0</p>
+      </div>
+    </div>
+
+    <!-- Current Period Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+      <div class="bg-zinc-900 rounded-3xl p-8 metric-card">
+        <h3 class="text-xl font-semibold mb-2 flex items-center gap-2" id="period-jobs-title">📅 This Period's Jobs</h3>
+        <p class="text-6xl font-black text-green-400" id="period-jobs">0</p>
+        <p class="text-zinc-400 mt-2" id="period-jobs-subtitle">Jobs in selected period</p>
+      </div>
+      <div class="bg-zinc-900 rounded-3xl p-8 metric-card">
+        <h3 class="text-xl font-semibold mb-2 flex items-center gap-2" id="period-revenue-title">💰 This Period's Revenue</h3>
+        <p class="text-6xl font-black text-green-400" id="period-revenue">$0</p>
+        <p class="text-zinc-400 mt-2" id="period-revenue-subtitle">Revenue in selected period</p>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="bg-zinc-900 rounded-3xl p-8">
+      <h2 class="text-3xl font-bold mb-2" id="chart-title">Revenue Trend</h2>
+      <p class="text-zinc-400 mb-6" id="chart-subtitle"></p>
+      <div class="h-96">
+        <canvas id="revenueChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const supabaseClient = supabase.createClient(
+        'https://jxnvndwfvphipttjbggk.supabase.co',
+        'sb_publishable_3jrvCcwVtu0aAlXuOBZDLQ_3Dr4eUs4'
+      );
+
+      let revenueChartInstance = null;
+      let currentPeriod = 'month'; // default
+      let allJobs = [];
+
+      // Mobile Menu
+      const menuButton = document.getElementById('mobile-menu-button');
+      const mobileMenu = document.getElementById('mobile-menu');
+      if (menuButton && mobileMenu) {
+        menuButton.addEventListener('click', () => {
+          mobileMenu.classList.toggle('hidden');
+          menuButton.classList.toggle('active');
+        });
+        document.querySelectorAll('#mobile-menu a').forEach(link => {
+          link.addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+            menuButton.classList.remove('active');
+          });
+        });
+      }
+
+      // Period buttons
+      document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentPeriod = btn.dataset.period;
+          updateDashboard();
+        });
+      });
+
+      async function loadAllData() {
+        try {
+          const { data } = await supabaseClient
+            .from('job_calculations')
+            .select('total_cost, created_at');
+          allJobs = data || [];
+        } catch (e) {
+          console.error(e);
+          allJobs = [];
+        }
+      }
+
+      function filterDataByPeriod(jobs, period) {
+        const now = new Date();
+        let startDate;
+
+        if (period === 'day') {
+          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        } else if (period === 'month') {
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        } else { // year
+          startDate = new Date(now.getFullYear(), 0, 1);
+        }
+
+        return jobs.filter(job => {
+          if (!job.created_at) return false;
+          return new Date(job.created_at) >= startDate;
+        });
+      }
+
+      function updateMetrics(filteredJobs, period) {
+        const count = filteredJobs.length;
+        const revenue = filteredJobs.reduce((sum, job) => sum + (Number(job.total_cost) || 0), 0);
+
+        document.getElementById('period-jobs').textContent = count;
+        document.getElementById('period-revenue').textContent = '$' + revenue.toLocaleString();
+
+        const titleText = period === 'day' ? "Today's" : period === 'month' ? "This Month's" : "This Year's";
+        document.getElementById('period-jobs-title').textContent = `📅 ${titleText} Jobs`;
+        document.getElementById('period-revenue-title').textContent = `💰 ${titleText} Revenue`;
+      }
+
+      function renderChart(filteredJobs, period) {
+        const ctx = document.getElementById('revenueChart');
+        if (revenueChartInstance) revenueChartInstance.destroy();
+
+        let labels = [];
+        let data = [];
+
+        if (period === 'day') {
+          // For a single day we could show hourly, but for simplicity we show total only or skip detailed chart
+          labels = ['Today'];
+          data = [filteredJobs.reduce((sum, j) => sum + (Number(j.total_cost)||0), 0)];
+        } else if (period === 'month') {
+          labels = Array.from({length: 31}, (_, i) => (i+1).toString());
+          data = new Array(31).fill(0);
+          filteredJobs.forEach(job => {
+            if (job.created_at) {
+              const day = new Date(job.created_at).getDate() - 1;
+              data[day] += Number(job.total_cost) || 0;
+            }
+          });
+        } else { // year
+          labels = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+          data = new Array(12).fill(0);
+          filteredJobs.forEach(job => {
+            if (job.created_at) {
+              const month = new Date(job.created_at).getMonth();
+              data[month] += Number(job.total_cost) || 0;
+            }
+          });
+        }
+
+        revenueChartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Revenue',
+              data: data,
+              backgroundColor: '#00A651',
+              borderRadius: 6,
+              barThickness: period === 'year' ? 28 : 18,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: { callbacks: { label: ctx => '$' + ctx.raw.toLocaleString() } }
+            },
+            scales: {
+              y: { beginAtZero: true, grid: { color: '#27272a' }, ticks: { color: '#a1a1aa', callback: v => '$' + v.toLocaleString() }},
+              x: { grid: { color: '#27272a' }, ticks: { color: '#a1a1aa' }}
+            }
+          }
+        });
+      }
+
+      async function updateDashboard() {
+        const filtered = filterDataByPeriod(allJobs, currentPeriod);
+        updateMetrics(filtered, currentPeriod);
+        renderChart(filtered, currentPeriod);
+      }
+
+      // Logout
+      const handleLogout = async () => {
+        await supabaseClient.auth.signOut({ scope: 'local' });
+        window.location.replace('staff-login.html');
+      };
+      document.getElementById('logout-btn').addEventListener('click', handleLogout);
+      document.getElementById('mobile-logout-btn').addEventListener('click', handleLogout);
+
+      // Init
+      async function init() {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) return window.location.replace('staff-login.html');
+
+        const name = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || "Staff";
+        document.getElementById('user-greeting').textContent = `Logged in as: ${name}`;
+
+        await loadAllData();
+
+        // Show overall totals
+        const totalCount = allJobs.length;
+        const totalRev = allJobs.reduce((sum, j) => sum + (Number(j.total_cost)||0), 0);
+        document.getElementById('total-quotes').textContent = totalCount;
+        document.getElementById('total-revenue').textContent = '$' + totalRev.toLocaleString();
+
+        updateDashboard();
+      }
+
+      init();
+    });
+  </script>
+</body>
+</html>

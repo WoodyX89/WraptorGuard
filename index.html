@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WraptorGuard | Shrink Wrapping Medicine Hat</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; }
+    .hero-bg { 
+      background: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), 
+                  url('https://picsum.photos/id/1015/2000/1200'); 
+      background-size: cover;
+      background-position: center;
+    }
+    .logo-green { color: #00A651; }
+
+    /* Hamburger Animation */
+    .hamburger span {
+      transition: all 0.3s ease;
+    }
+    .hamburger.active span:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+    }
+    .hamburger.active span:nth-child(2) {
+      opacity: 0;
+    }
+    .hamburger.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(7px, -6px);
+    }
+  </style>
+</head>
+<body class="bg-zinc-950 text-white">
+
+  <!-- Navbar -->
+  <nav class="bg-black border-b border-green-600 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <!-- Logo -->
+        <div class="flex items-center gap-3">
+          <img src="images/logo2.png" alt="WraptorGuard Logo" class="h-16 w-auto md:h-24">
+          <div>
+            <span class="text-2xl md:text-3xl font-black tracking-tighter logo-green">WRAPTOR</span>
+            <span class="text-2xl md:text-3xl font-black tracking-tighter">GUARD</span>
+          </div>
+        </div>
+
+        <!-- Desktop Menu -->
+        <div class="hidden md:flex gap-8 text-lg">
+          <a href="#services" class="hover:text-green-400 transition">Services</a>
+          <a href="#gallery" class="hover:text-green-400 transition">Gallery</a>
+          <a href="#about" class="hover:text-green-400 transition">About</a>
+          <a href="#contact" class="hover:text-green-400 transition">Contact</a>
+          <a href="staff-login.html" class="hover:text-green-400 transition">Staff Login</a>
+        </div>
+
+        <!-- Desktop CTA -->
+        <a href="#contact" class="hidden md:block bg-green-600 hover:bg-green-500 px-6 py-3 rounded-xl font-bold text-lg transition">
+          GET A FREE QUOTE
+        </a>
+
+        <!-- Mobile Hamburger -->
+        <button id="mobile-menu-button" class="md:hidden hamburger flex flex-col justify-center gap-1.5 w-10 h-10">
+          <span class="block h-0.5 w-8 bg-white"></span>
+          <span class="block h-0.5 w-8 bg-white"></span>
+          <span class="block h-0.5 w-8 bg-white"></span>
+        </button>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div id="mobile-menu" class="hidden md:hidden mt-4 py-6 border-t border-green-900">
+        <div class="flex flex-col gap-6 text-xl">
+          <a href="#services" class="hover:text-green-400 transition py-2">Services</a>
+          <a href="#gallery" class="hover:text-green-400 transition py-2">Gallery</a>
+          <a href="#about" class="hover:text-green-400 transition py-2">About</a>
+          <a href="#contact" class="hover:text-green-400 transition py-2">Contact</a>
+          <a href="staff-login.html" class="hover:text-green-400 transition py-2">Login</a>
+
+          
+          <a href="#contact" class="mt-6 bg-green-600 hover:bg-green-500 text-black font-bold text-center py-5 rounded-2xl text-xl transition">
+            GET A FREE QUOTE
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero-bg h-screen flex items-center">
+    <div class="max-w-7xl mx-auto px-6 text-center">
+      <h1 class="text-5xl sm:text-6xl md:text-7xl font-black mb-6 tracking-tighter leading-tight">
+        PROTECT WHAT MATTERS.<br>
+        <span class="logo-green">WRAPTORGUARD</span>
+      </h1>
+      <p class="text-xl sm:text-2xl md:text-3xl mb-10 max-w-2xl mx-auto">
+        Professional shrink wrapping in Medicine Hat & Southern Alberta.<br>
+        Boats • RVs • Equipment • Patio Furniture • Storage Protection
+      </p>
+      <div class="flex flex-col sm:flex-row gap-6 justify-center">
+        <a href="#contact" class="bg-green-600 hover:bg-green-500 text-black font-bold text-xl px-10 py-6 rounded-2xl inline-block transition">
+          GET YOUR FREE QUOTE TODAY
+        </a>
+        <a href="#services" class="border-2 border-white hover:bg-white hover:text-black font-bold text-xl px-10 py-6 rounded-2xl inline-block transition">
+          SEE OUR SERVICES
+        </a>
+      </div>
+      <p class="mt-12 text-sm opacity-75">Serving Medicine Hat, Cypress County, Redcliff & surrounding areas</p>
+    </div>
+  </header>
+
+  <!-- Services -->
+  <section id="services" class="py-20 md:py-24 bg-zinc-900">
+    <div class="max-w-7xl mx-auto px-6">
+      <h2 class="text-4xl md:text-5xl font-bold text-center mb-12 md:mb-16">What We Shrink-Wrap</h2>
+      <div class="grid md:grid-cols-3 gap-8 md:gap-10">
+        <div class="bg-zinc-800 rounded-3xl p-8 md:p-10 text-center hover:scale-105 transition">
+          <div class="text-6xl mb-6">⛵</div>
+          <h3 class="text-2xl md:text-3xl font-bold mb-4">Boats & Marine</h3>
+          <p class="text-zinc-400">Winterize and protect your boat from snow, UV, and moisture. Mobile service to your marina or driveway.</p>
+        </div>
+        <div class="bg-zinc-800 rounded-3xl p-8 md:p-10 text-center hover:scale-105 transition">
+          <div class="text-6xl mb-6">🏠</div>
+          <h3 class="text-2xl md:text-3xl font-bold mb-4">RVs, Campers & Trailers</h3>
+          <p class="text-zinc-400">Full shrink-wrap protection for seasonal storage or long-haul transport.</p>
+        </div>
+        <div class="bg-zinc-800 rounded-3xl p-8 md:p-10 text-center hover:scale-105 transition">
+          <div class="text-6xl mb-6">🏗️</div>
+          <h3 class="text-2xl md:text-3xl font-bold mb-4">Heavy Equipment & Machinery</h3>
+          <p class="text-zinc-400">Industrial-grade wrapping for construction equipment, farm machinery, and more.</p>
+        </div>
+        <div class="bg-zinc-800 rounded-3xl p-8 md:p-10 text-center hover:scale-105 transition">
+          <div class="text-6xl mb-6">🪑</div>
+          <h3 class="text-2xl md:text-3xl font-bold mb-4">Home & Business Patio Furniture</h3>
+          <p class="text-zinc-400">Protect your outdoor patio sets, tables and chairs from harsh Alberta winters, snow, rain, and UV damage. Perfect for homes and commercial properties.</p>
+        </div>
+        <div class="bg-zinc-800 rounded-3xl p-8 md:p-10 text-center hover:scale-105 transition">
+          <div class="text-6xl mb-6">🚚</div>
+          <h3 class="text-2xl md:text-3xl font-bold mb-4">Freight & Transport</h3>
+          <p class="text-zinc-400">Secure shrink wrapping for oversized loads and long-distance shipping.</p>
+        </div>
+        <div class="bg-zinc-800 rounded-3xl p-8 md:p-10 text-center hover:scale-105 transition">
+          <div class="text-6xl mb-6">📦</div>
+          <h3 class="text-2xl md:text-3xl font-bold mb-4">Custom Projects</h3>
+          <p class="text-zinc-400">Anything you need protected — we’ve got the raptor power for it!</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section id="gallery" class="py-20 md:py-24 bg-black">
+    <div class="max-w-7xl mx-auto px-6">
+      <h2 class="text-4xl md:text-5xl font-bold text-center mb-12 md:mb-16">Real Protection. Real Results.</h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+        <img src="https://picsum.photos/id/201/800/600" alt="Boat shrink wrap" class="rounded-3xl aspect-video object-cover">
+        <img src="https://picsum.photos/id/237/800/600" alt="RV wrapped" class="rounded-3xl aspect-video object-cover">
+        <img src="https://picsum.photos/id/180/800/600" alt="Equipment protection" class="rounded-3xl aspect-video object-cover">
+        <img src="https://picsum.photos/id/1015/800/600" alt="Patio furniture wrapped" class="rounded-3xl aspect-video object-cover">
+        <img src="https://picsum.photos/id/133/800/600" alt="Custom project" class="rounded-3xl aspect-video object-cover">
+        <img src="https://picsum.photos/id/201/800/600" alt="Before and after" class="rounded-3xl aspect-video object-cover">
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section id="about" class="py-20 md:py-24 bg-zinc-900">
+    <div class="max-w-4xl mx-auto px-6 text-center">
+      <h2 class="text-4xl md:text-5xl font-bold mb-10">Why WraptorGuard?</h2>
+      
+      <div class="flex justify-center mb-12">
+        <img 
+          src="images/banner.jpg" 
+          alt="WraptorGuard Logo" 
+          class="h-60 sm:h-64 md:h-80 lg:h-96 w-auto max-w-full rounded-2xl">
+      </div>
+
+      <p class="text-lg md:text-xl leading-relaxed text-zinc-300">
+        Based right here in Medicine Hat, WraptorGuard delivers tough, reliable shrink-wrapping with a ferocious attention to detail. 
+        Whether it's protecting your boat through a harsh Alberta winter, securing heavy equipment, or shielding your home and business patio furniture, 
+        our mobile team uses premium materials and professional heat-shrinking techniques to keep your assets safe from the elements.
+      </p>
+      <p class="mt-8 text-lg text-green-400 font-semibold">
+        No job too big. No job too small. We bring the raptor power to every project.
+      </p>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact" class="py-20 md:py-24 bg-gradient-to-b from-zinc-900 to-black">
+    <div class="max-w-2xl mx-auto px-6 text-center">
+      <h2 class="text-4xl md:text-5xl font-bold mb-8">Ready to Protect Your Stuff?</h2>
+      <p class="text-xl md:text-2xl mb-12">Get a free, no-obligation quote today.</p>
+      
+      <form class="space-y-8 text-left">
+        <div>
+          <input type="text" placeholder="Your Name" class="w-full bg-zinc-800 border border-green-600 rounded-2xl px-6 py-5 text-lg focus:outline-none focus:border-green-400">
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <input type="tel" placeholder="Phone" class="w-full bg-zinc-800 border border-green-600 rounded-2xl px-6 py-5 text-lg focus:outline-none focus:border-green-400">
+          <input type="email" placeholder="Email" class="w-full bg-zinc-800 border border-green-600 rounded-2xl px-6 py-5 text-lg focus:outline-none focus:border-green-400">
+        </div>
+        <div>
+          <textarea placeholder="Describe your project (boat size, patio furniture set, equipment, location, etc.)" rows="5" 
+                    class="w-full bg-zinc-800 border border-green-600 rounded-2xl px-6 py-5 text-lg focus:outline-none focus:border-green-400"></textarea>
+        </div>
+        <button type="submit" class="w-full bg-green-600 hover:bg-green-500 text-black font-bold text-2xl py-7 rounded-3xl transition">
+          SEND MESSAGE – LET’S WRAP IT!
+        </button>
+      </form>
+
+      <div class="mt-16 flex flex-col md:flex-row justify-center gap-8 text-lg">
+        <p>📍 Medicine Hat, Alberta</p>
+        <p>📞 (403) XXX-XXXX</p>
+        <p>✉️ info@wraptorguard.ca</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-black py-12 border-t border-green-900">
+    <div class="max-w-7xl mx-auto px-6 text-center text-sm text-zinc-500">
+      <p>&copy; 2026 WraptorGuard Shrink Wrapping. All Rights Reserved. Proudly serving Medicine Hat and Southern Alberta.</p>
+      <p class="mt-2">Designed with raptor strength 🦖</p>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile Menu Toggle
+    const menuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    menuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+      menuButton.classList.toggle('active');
+    });
+
+    // Close mobile menu when clicking any link
+    document.querySelectorAll('#mobile-menu a').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.add('hidden');
+        menuButton.classList.remove('active');
+      });
+    });
+  </script>
+
+</body>
+</html>

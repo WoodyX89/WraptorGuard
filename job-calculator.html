@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Calculator - WraptorGuard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    .logo-green { color: #00A651; }
+    body { font-family: system-ui, sans-serif; }
+
+    /* Hamburger Animation */
+    .hamburger span {
+      transition: all 0.3s ease;
+    }
+    .hamburger.active span:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+    }
+    .hamburger.active span:nth-child(2) {
+      opacity: 0;
+    }
+    .hamburger.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(7px, -6px);
+    }
+  </style>
+</head>
+<body class="bg-zinc-950 text-white min-h-screen">
+
+    <!-- Navbar -->
+  <nav class="bg-black border-b border-green-600 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <!-- Logo -->
+        <div class="flex items-center gap-3">
+          <img src="images/logo2.png" alt="WraptorGuard Logo" class="h-16 w-auto md:h-24">
+          <div>
+            <span class="text-2xl md:text-3xl font-black tracking-tighter logo-green">WRAPTOR</span>
+            <span class="text-2xl md:text-3xl font-black tracking-tighter">GUARD</span>
+          </div>
+        </div>
+
+        <!-- Desktop Menu -->
+        <div class="hidden md:flex gap-8 text-lg">
+          <a href="staff-dashboard.html" class="hover:text-green-400 transition">Dashboard</a>
+          <a href="job-calculator.html" class="hover:text-green-400 transition">Calculator</a>
+          <a href="saved-quotes.html" class="hover:text-green-400 transition">Quotes</a>
+          <a href="pricing-settings.html" class="hover:text-green-400 transition">Pricing</a>
+        </div>
+
+        <!-- Desktop Logout -->
+        <button id="logout-btn" class="hidden md:block bg-red-600 hover:bg-red-500 px-6 py-3 rounded-2xl font-semibold transition">
+          Logout
+        </button>
+
+        <!-- Mobile Hamburger -->
+        <button id="mobile-menu-button" class="md:hidden hamburger flex flex-col justify-center gap-1.5 w-10 h-10">
+          <span class="block h-0.5 w-8 bg-white"></span>
+          <span class="block h-0.5 w-8 bg-white"></span>
+          <span class="block h-0.5 w-8 bg-white"></span>
+          <span class="block h-0.5 w-8 bg-white"></span>
+
+        </button>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div id="mobile-menu" class="hidden md:hidden mt-4 py-6 border-t border-green-900">
+        <div class="flex flex-col gap-6 text-xl">
+          <a href="staff-dashboard.html" class="hover:text-green-400 transition py-2">Dashboard</a>
+          <a href="job-calculator.html" class="hover:text-green-400 transition py-2">Job Calculator</a>
+          <a href="saved-quotes.html" class="hover:text-green-400 transition py-2">Saved Quotes</a>
+          <a href="pricing-settings.html" class="hover:text-green-400 transition py-2">Pricing</a>
+          <button id="mobile-logout-btn" 
+                  class="mt-6 bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-semibold text-center">
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <div class="flex items-center gap-4 mb-10">
+      <a href="staff-dashboard.html" class="text-green-400 hover:text-green-300 flex items-center gap-2">
+        ← Back to Dashboard
+      </a>
+      <h1 class="text-4xl sm:text-5xl font-bold">Job Shrink Wrap Calculator</h1>
+    </div>
+
+    <!-- Job Calculator -->
+    <div class="bg-zinc-900 rounded-3xl p-6 sm:p-10">
+      <div class="grid md:grid-cols-2 gap-12">
+        <!-- Input Form -->
+        <div class="space-y-6">
+          <div>
+            <label class="block text-sm text-zinc-400 mb-2">Customer Name</label>
+            <input id="customer_name" type="text" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-6 py-4" placeholder="John Smith">
+          </div>
+          <div>
+            <label class="block text-sm text-zinc-400 mb-2">Customer Phone</label>
+            <input id="customer_phone" type="tel" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-6 py-4" placeholder="(403) 555-1234">
+          </div>
+          <div>
+            <label class="block text-sm text-zinc-400 mb-2">Equipment Type</label>
+            <select id="equipment-type" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-6 py-4">
+              <option value="boat">Boat & Marine</option>
+              <option value="rv">RV / Camper / Trailer</option>
+              <option value="heavy">Heavy Equipment & Machinery</option>
+              <option value="patio">Patio Furniture Set</option>
+              <option value="freight">Freight & Transport</option>
+              <option value="custom">Custom Project</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm text-zinc-400 mb-2">Height (ft)</label>
+              <input id="height" type="number" step="0.1" value="8" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-6 py-4">
+            </div>
+            <div>
+              <label class="block text-sm text-zinc-400 mb-2">Length (ft)</label>
+              <input id="length" type="number" step="0.1" value="20" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-6 py-4">
+            </div>
+            <div>
+              <label class="block text-sm text-zinc-400 mb-2">Width (ft)</label>
+              <input id="width" type="number" step="0.1" value="8" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-6 py-4">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm text-zinc-400 mb-2">Notes</label>
+            <textarea id="notes" rows="4" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-6 py-4" placeholder="Special instructions, access issues, etc..."></textarea>
+          </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="bg-black/50 rounded-3xl p-8">
+          <h3 class="text-xl font-semibold mb-6 text-green-400">Estimated Package</h3>
+          <div id="results" class="space-y-6 min-h-[260px]"></div>
+
+          <button id="save-job-btn" class="mt-10 w-full bg-green-600 hover:bg-green-500 text-black font-bold text-xl py-6 rounded-3xl transition">
+            SAVE JOB PACKAGE
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+      const supabaseClient = supabase.createClient(
+        'https://jxnvndwfvphipttjbggk.supabase.co',
+        'sb_publishable_3jrvCcwVtu0aAlXuOBZDLQ_3Dr4eUs4'
+      );
+
+      let prices = {};
+      let currentJobData = null;
+
+      const configs = {
+        boat: { name: "Boat & Marine" },
+        rv: { name: "RV / Camper" },
+        heavy: { name: "Heavy Equipment" },
+        patio: { name: "Patio Furniture" },
+        freight: { name: "Freight" },
+        custom: { name: "Custom" }
+      };
+
+      // Mobile Menu
+      const menuButton = document.getElementById('mobile-menu-button');
+      const mobileMenu = document.getElementById('mobile-menu');
+
+      if (menuButton && mobileMenu) {
+        menuButton.addEventListener('click', () => {
+          mobileMenu.classList.toggle('hidden');
+          menuButton.classList.toggle('active');
+        });
+
+        document.querySelectorAll('#mobile-menu a').forEach(link => {
+          link.addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+            menuButton.classList.remove('active');
+          });
+        });
+      }
+
+      // Elements
+      const saveBtn = document.getElementById('save-job-btn');
+      const logoutBtn = document.getElementById('logout-btn');
+      const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+
+      // Load pricing from database
+      async function loadPrices() {
+        try {
+          const { data, error } = await supabaseClient
+            .from('pricing_settings')
+            .select('*');
+
+          if (error) throw error;
+
+          prices = {};
+          data.forEach(row => {
+            prices[row.equipment_type] = {
+              price_per_sqft: Number(row.price_per_sqft) || 0.45,
+              vent_price: Number(row.vent_price) || 15,
+              extra_fee: Number(row.extra_fee) || 65
+            };
+          });
+        } catch (err) {
+          console.error("Failed to load prices:", err);
+        }
+      }
+
+      function calculate() {
+        const type = document.getElementById('equipment-type').value;
+        const h = parseFloat(document.getElementById('height').value) || 0;
+        const l = parseFloat(document.getElementById('length').value) || 0;
+        const w = parseFloat(document.getElementById('width').value) || 0;
+
+        const p = prices[type] || { price_per_sqft: 0.45, vent_price: 15, extra_fee: 65 };
+
+        const surface = 2 * (h * l + h * w + l * w);
+        const sqft = Math.ceil(surface * 1.28);
+        const vents = Math.ceil(sqft / 1000 * 1.5);
+        const totalCost = Math.round(sqft * p.price_per_sqft + vents * p.vent_price + p.extra_fee);
+
+        document.getElementById('results').innerHTML = `
+          <div class="space-y-5 text-base sm:text-lg">
+            <div class="flex justify-between"><span class="text-zinc-400">Type:</span> <span>${configs[type].name}</span></div>
+            <div class="flex justify-between"><span class="text-zinc-400">Shrink Wrap:</span> <span>${sqft.toLocaleString()} sq ft</span></div>
+            <div class="flex justify-between"><span class="text-zinc-400">Vents:</span> <span>${vents}</span></div>
+            <div class="flex justify-between border-t border-green-800 pt-5">
+              <span class="text-zinc-400">Total Estimated Cost</span>
+              <span class="text-green-400 font-bold text-2xl">$${totalCost}</span>
+            </div>
+          </div>
+        `;
+
+        currentJobData = {
+          customer_name: document.getElementById('customer_name').value.trim() || null,
+          customer_phone: document.getElementById('customer_phone').value.trim() || null,
+          equipment_type: type,
+          height_ft: h,
+          length_ft: l,
+          width_ft: w,
+          shrink_wrap_sqft: sqft,
+          vents: vents,
+          supplies: ["Shrink wrap film", `${vents} vents`, "Heat gun tape", "Strapping", "Edge protectors"],
+          total_cost: totalCost,
+          notes: document.getElementById('notes').value.trim() || null
+        };
+      }
+
+      async function saveJob() {
+        if (!currentJobData) return alert("Please fill in the dimensions");
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Saving...";
+
+        try {
+          const { data: { session } } = await supabaseClient.auth.getSession();
+
+          const { error } = await supabaseClient
+            .from('job_calculations')
+            .insert({ staff_id: session.user.id, ...currentJobData });
+
+          if (error) throw error;
+
+          alert("✅ Job saved successfully!");
+        } catch (err) {
+          alert("Save failed: " + err.message);
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = "SAVE JOB PACKAGE";
+        }
+      }
+
+      // Logout
+      const handleLogout = async () => {
+        await supabaseClient.auth.signOut({ scope: 'local' });
+        window.location.replace('staff-login.html');
+      };
+
+      if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+      if (mobileLogoutBtn) mobileLogoutBtn.addEventListener('click', handleLogout);
+
+      // Event listeners
+      document.querySelectorAll('#equipment-type, #height, #length, #width, #notes, #customer_name, #customer_phone')
+        .forEach(el => el.addEventListener('input', calculate));
+
+      saveBtn.addEventListener('click', saveJob);
+
+      // Initialize
+      async function init() {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) return window.location.replace('staff-login.html');
+
+        await loadPrices();
+        calculate();
+      }
+
+      init();
+    });
+  </script>
+</body>
+</html>

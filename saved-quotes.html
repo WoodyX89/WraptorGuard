@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saved Job Quotes - WraptorGuard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    .logo-green { color: #00A651; }
+  </style>
+</head>
+<body class="bg-zinc-950 text-white min-h-screen">
+
+  <!-- Navbar -->
+  <nav class="bg-black border-b border-green-600 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <!-- Logo -->
+        <div class="flex items-center gap-3">
+          <img src="images/logo2.png" alt="WraptorGuard Logo" class="h-16 w-auto md:h-24">
+          <div>
+            <span class="text-2xl md:text-3xl font-black tracking-tighter logo-green">WRAPTOR</span>
+            <span class="text-2xl md:text-3xl font-black tracking-tighter">GUARD</span>
+          </div>
+        </div>
+
+        <!-- Desktop Menu -->
+        <div class="hidden md:flex gap-8 text-lg">
+          <a href="staff-dashboard.html" class="hover:text-green-400 transition">Dashboard</a>
+          <a href="job-calculator.html" class="hover:text-green-400 transition">Calculator</a>
+          <a href="saved-quotes.html" class="hover:text-green-400 transition">Quotes</a>
+          <a href="pricing-settings.html" class="hover:text-green-400 transition">Pricing</a>
+        </div>
+
+        <!-- Desktop Logout -->
+        <button id="logout-btn" class="hidden md:block bg-red-600 hover:bg-red-500 px-6 py-3 rounded-2xl font-semibold transition">
+          Logout
+        </button>
+
+        <!-- Mobile Hamburger -->
+        <button id="mobile-menu-button" class="md:hidden hamburger flex flex-col justify-center gap-1.5 w-10 h-10">
+          <span class="block h-0.5 w-8 bg-white"></span>
+          <span class="block h-0.5 w-8 bg-white"></span>
+          <span class="block h-0.5 w-8 bg-white"></span>
+          <span class="block h-0.5 w-8 bg-white"></span>
+
+        </button>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div id="mobile-menu" class="hidden md:hidden mt-4 py-6 border-t border-green-900">
+        <div class="flex flex-col gap-6 text-xl">
+          <a href="staff-dashboard.html" class="hover:text-green-400 transition py-2">Dashboard</a>
+          <a href="job-calculator.html" class="hover:text-green-400 transition py-2">Job Calculator</a>
+          <a href="saved-quotes.html" class="hover:text-green-400 transition py-2">Saved Quotes</a>
+          <a href="pricing-settings.html" class="hover:text-green-400 transition py-2">Pricing</a>
+          <button id="mobile-logout-btn" 
+                  class="mt-6 bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-semibold text-center">
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <h1 class="text-4xl font-bold mb-8">Saved Job Quotes</h1>
+
+    <div id="saved-jobs" class="space-y-6"></div>
+  </div>
+
+  <script>
+    const supabaseClient = supabase.createClient(
+      'https://jxnvndwfvphipttjbggk.supabase.co',
+      'sb_publishable_3jrvCcwVtu0aAlXuOBZDLQ_3Dr4eUs4'
+    );
+
+    async function loadSavedJobs() {
+      const container = document.getElementById('saved-jobs');
+      container.innerHTML = `<p class="text-zinc-500 py-12 text-center">Loading...</p>`;
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('job_calculations')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (data.length === 0) {
+          container.innerHTML = `<p class="text-zinc-500 py-12 text-center">No saved quotes yet.</p>`;
+          return;
+        }
+
+        container.innerHTML = data.map(job => {
+          const cfg = {
+            boat: "Boat & Marine",
+            rv: "RV / Camper",
+            heavy: "Heavy Equipment",
+            patio: "Patio Furniture",
+            freight: "Freight",
+            custom: "Custom"
+          }[job.equipment_type] || job.equipment_type;
+
+          return `
+            <div class="bg-zinc-800 rounded-3xl p-6">
+              <div class="flex justify-between items-start">
+                <div>
+                  <div class="font-semibold text-lg">${job.customer_name || 'No Name'}</div>
+                  <div class="text-sm text-zinc-400">${job.customer_phone || ''}</div>
+                </div>
+                <div class="text-green-400 font-bold text-2xl">$${job.total_cost}</div>
+              </div>
+              <div class="mt-4 text-sm text-zinc-400">${cfg} • ${new Date(job.created_at).toLocaleDateString()}</div>
+              <div class="mt-5 grid grid-cols-2 gap-4 text-sm">
+                <div>${job.height_ft} × ${job.length_ft} × ${job.width_ft} ft</div>
+                <div>${job.shrink_wrap_sqft} sq ft • ${job.vents} vents</div>
+              </div>
+              ${job.notes ? `<div class="mt-4 text-sm text-zinc-400 border-t border-zinc-700 pt-4">Notes: ${job.notes}</div>` : ''}
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        container.innerHTML = `<p class="text-red-400">Failed to load quotes.</p>`;
+      }
+    }
+
+    // Protect page
+    async function init() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) return window.location.replace('staff-login.html');
+      loadSavedJobs();
+    }
+
+    init();
+  </script>
+</body>
+</html>
