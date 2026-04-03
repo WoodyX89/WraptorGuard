@@ -3,15 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Saved Job Quotes - WraptorGuard</title>
+  <title>Job Schedule - WraptorGuard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <style>
     .logo-green { color: #00A651; }
     body { font-family: system-ui, sans-serif; }
-    .photo-grid img { transition: transform 0.2s ease; }
-    .photo-grid img:hover { transform: scale(1.05); }
+    .calendar-day {
+      transition: all 0.2s ease;
+    }
+    .calendar-day:hover {
+      background-color: #27272a;
+      transform: translateY(-2px);
+    }
+    .calendar-day.has-jobs {
+      background-color: #052e16;
+      border: 2px solid #00A651;
+    }
+    .calendar-day.today {
+      border: 2px solid #eab308;
+    }
     .job-card {
       cursor: pointer;
       transition: all 0.2s ease;
@@ -20,7 +32,6 @@
       transform: translateY(-2px);
       box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3);
     }
-    .thumbnail:hover { transform: scale(1.08); }
   </style>
 </head>
 <body class="bg-zinc-950 text-white min-h-screen">
@@ -43,6 +54,8 @@
           <a href="saved-quotes.html" class="hover:text-green-400 transition">Estimates</a>
           <a href="job-schedule.html" class="hover:text-green-400 transition">Calendar</a>
           <a href="pricing-settings.html" class="hover:text-green-400 transition">Pricing</a>
+
+
         </div>
 
         <button id="logout-btn" class="hidden md:block bg-red-600 hover:bg-red-500 px-6 py-3 rounded-2xl font-semibold transition">
@@ -70,29 +83,31 @@
   </nav>
 
   <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-    <div class="flex flex-col lg:flex-row lg:items-end gap-4 mb-8">
-      <h1 class="text-4xl font-bold">Saved Job Quotes</h1>
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4">
+      <h1 class="text-4xl sm:text-5xl font-bold">Job Schedule</h1>
       
-      <div class="flex flex-col sm:flex-row gap-4">
-        <input id="search-input" type="text" placeholder="Search by customer name..." 
-               class="w-full sm:w-80 bg-zinc-800 border border-zinc-700 rounded-2xl px-5 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-green-500">
-        
-        <div class="flex items-center gap-3">
-          <label class="text-sm text-zinc-400 whitespace-nowrap">Sort:</label>
-          <select id="sort-select" class="bg-zinc-800 border border-zinc-700 rounded-2xl px-5 py-3 text-white focus:outline-none focus:border-green-500">
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-            <option value="updated">Recently Updated</option>
-            <option value="not_started">Not Started</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="all">All Statuses</option>
-          </select>
+      <div class="flex items-center gap-4">
+        <div class="bg-zinc-900 rounded-3xl p-1 flex">
+          <button id="monthly-btn" class="view-btn px-6 py-2 rounded-3xl text-sm font-medium">Monthly</button>
+          <button id="weekly-btn" class="view-btn active px-6 py-2 rounded-3xl text-sm font-medium">Weekly</button>
         </div>
+
+        <button id="prev-btn" class="px-5 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-2xl">←</button>
+        <div id="current-period" class="text-xl font-semibold px-8 py-3 bg-zinc-900 rounded-3xl min-w-[260px] text-center"></div>
+        <button id="next-btn" class="px-5 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-2xl">→</button>
       </div>
     </div>
 
-    <div id="saved-jobs" class="space-y-6"></div>
+    <!-- Calendar -->
+    <div id="calendar-container" class="bg-zinc-900 rounded-3xl p-6">
+      <div id="calendar-grid" class="grid grid-cols-7 gap-3"></div>
+    </div>
+
+    <!-- Selected Day Jobs -->
+    <div class="mt-12">
+      <h2 class="text-2xl font-semibold mb-6" id="selected-date-title">Select a date to view scheduled jobs</h2>
+      <div id="daily-jobs" class="space-y-4"></div>
+    </div>
   </div>
 
   <!-- Edit Job Modal -->
@@ -121,7 +136,6 @@
           </div>
         </div>
 
-        <!-- Scheduled Date -->
         <div id="scheduled-date-group" class="hidden">
           <label class="block text-sm text-zinc-400 mb-2">Scheduled Date & Time</label>
           <input id="edit_scheduled_date" type="datetime-local" 
@@ -158,6 +172,8 @@
       'sb_publishable_3jrvCcwVtu0aAlXuOBZDLQ_3Dr4eUs4'
     );
 
+    let currentDate = new Date();
+    let currentView = 'weekly';
     let currentEditingJobId = null;
     let uploadedFiles = [];
 
@@ -169,117 +185,192 @@
       document.querySelectorAll('#mobile-menu a').forEach(link => link.addEventListener('click', () => mobileMenu.classList.add('hidden')));
     }
 
-    // Show/hide scheduled date field
-    document.getElementById('edit_status').addEventListener('change', function() {
-      document.getElementById('scheduled-date-group').classList.toggle('hidden', this.value !== 'in_progress');
+    // View Toggle
+    document.getElementById('monthly-btn').addEventListener('click', () => {
+      currentView = 'monthly';
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('monthly-btn').classList.add('active');
+      loadSchedule();
     });
 
-    // Live Search + Sort
-    document.getElementById('search-input').addEventListener('input', () => renderJobs(allJobs));
-    document.getElementById('sort-select').addEventListener('change', () => renderJobs(allJobs));
+    document.getElementById('weekly-btn').addEventListener('click', () => {
+      currentView = 'weekly';
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('weekly-btn').classList.add('active');
+      loadSchedule();
+    });
 
-    let allJobs = [];
+    async function loadSchedule() {
+      const { data: jobs } = await supabaseClient
+        .from('job_calculations')
+        .select('*')
+        .eq('status', 'in_progress')
+        .not('scheduled_date', 'is', null)
+        .order('scheduled_date', { ascending: true });
 
-    async function loadSavedJobs() {
-      const container = document.getElementById('saved-jobs');
-      container.innerHTML = `<p class="text-zinc-500 py-12 text-center">Loading quotes...</p>`;
-
-      try {
-        const { data, error } = await supabaseClient.from('job_calculations').select('*');
-        if (error) throw error;
-        allJobs = data || [];
-        renderJobs(allJobs);
-      } catch (e) {
-        container.innerHTML = `<p class="text-red-400 py-12 text-center">Failed to load quotes.</p>`;
+      if (currentView === 'monthly') {
+        renderMonthlyCalendar(jobs || []);
+      } else {
+        renderWeeklyView(jobs || []);
       }
     }
 
-    async function renderJobs(jobs) {
-      const container = document.getElementById('saved-jobs');
-      const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
-      const sortValue = document.getElementById('sort-select').value;
+    function renderWeeklyView(jobs) {
+      const grid = document.getElementById('calendar-grid');
+      grid.innerHTML = '';
+      grid.className = 'grid grid-cols-7 gap-3';
 
-      let filtered = [...jobs];
+      const startOfWeek = new Date(currentDate);
+      startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
 
-      if (searchTerm) {
-        filtered = filtered.filter(job => (job.customer_name || '').toLowerCase().includes(searchTerm));
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+      document.getElementById('current-period').textContent = 
+        `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+
+      for (let i = 0; i < 7; i++) {
+        const dayDate = new Date(startOfWeek);
+        dayDate.setDate(startOfWeek.getDate() + i);
+        const dateStr = dayDate.toISOString().split('T')[0];
+
+        const dayJobs = jobs.filter(j => {
+          if (!j.scheduled_date) return false;
+          return new Date(j.scheduled_date).toISOString().split('T')[0] === dateStr;
+        });
+
+        const isToday = dayDate.toDateString() === new Date().toDateString();
+
+        grid.innerHTML += `
+          <div onclick="selectDate('${dateStr}')" 
+               class="calendar-day bg-zinc-900 rounded-3xl p-4 cursor-pointer min-h-[180px] ${isToday ? 'today' : ''} ${dayJobs.length > 0 ? 'has-jobs' : ''}">
+            <div class="text-center mb-1 text-xs text-zinc-400">
+              ${dayDate.toLocaleDateString('en-US', { weekday: 'short' })}
+            </div>
+            <div class="text-center font-bold text-3xl mb-4 ${isToday ? 'text-yellow-400' : ''}">
+              ${dayDate.getDate()}
+            </div>
+            ${dayJobs.length > 0 ? `
+              <div class="text-center text-xs bg-green-900/80 text-green-400 px-3 py-1 rounded-2xl inline-block">
+                ${dayJobs.length} job${dayJobs.length > 1 ? 's' : ''}
+              </div>` : ''}
+          </div>`;
+      }
+    }
+
+    function renderMonthlyCalendar(jobs) {
+      const grid = document.getElementById('calendar-grid');
+      grid.innerHTML = '';
+      grid.className = 'grid grid-cols-7 gap-3';
+
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+
+      document.getElementById('current-period').textContent = 
+        currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+      ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(day => {
+        grid.innerHTML += `<div class="text-center text-zinc-400 py-2 font-medium">${day}</div>`;
+      });
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      for (let i = 0; i < firstDay; i++) {
+        grid.innerHTML += `<div class="h-32 bg-zinc-900/30 rounded-3xl"></div>`;
       }
 
-      if (['not_started', 'in_progress', 'completed'].includes(sortValue)) {
-        filtered = filtered.filter(job => job.status === sortValue);
-      }
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        const dayJobs = jobs.filter(j => {
+          if (!j.scheduled_date) return false;
+          return new Date(j.scheduled_date).toISOString().split('T')[0] === dateStr;
+        });
 
-      // Sort
-      if (sortValue === 'newest' || sortValue === 'all') {
-        filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      } else if (sortValue === 'oldest') {
-        filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-      } else if (sortValue === 'updated') {
-        filtered.sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
-      } else {
-        filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      }
+        const isToday = day === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear();
 
-      if (filtered.length === 0) {
-        container.innerHTML = `<p class="text-zinc-500 py-12 text-center">No quotes found.</p>`;
+        grid.innerHTML += `
+          <div onclick="selectDate('${dateStr}')" 
+               class="calendar-day h-32 bg-zinc-900 rounded-3xl p-4 cursor-pointer ${isToday ? 'today' : ''} ${dayJobs.length > 0 ? 'has-jobs' : ''}">
+            <div class="text-right font-bold text-lg ${isToday ? 'text-yellow-400' : ''}">${day}</div>
+            ${dayJobs.length > 0 ? `
+              <div class="mt-3 text-xs bg-green-900/80 text-green-400 px-3 py-1 rounded-2xl inline-block">
+                ${dayJobs.length} job${dayJobs.length > 1 ? 's' : ''}
+              </div>` : ''}
+          </div>`;
+      }
+    }
+
+    window.selectDate = async function(dateStr) {
+      document.getElementById('selected-date-title').textContent = 
+        `Scheduled Jobs on ${new Date(dateStr).toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' })}`;
+
+      const { data: jobs } = await supabaseClient
+        .from('job_calculations')
+        .select('*')
+        .eq('status', 'in_progress')
+        .gte('scheduled_date', dateStr + 'T00:00:00Z')
+        .lte('scheduled_date', dateStr + 'T23:59:59Z')
+        .order('scheduled_date');
+
+      const container = document.getElementById('daily-jobs');
+      container.innerHTML = '';
+
+      if (!jobs || jobs.length === 0) {
+        container.innerHTML = `<p class="text-zinc-400 py-12 text-center">No jobs scheduled for this day.</p>`;
         return;
       }
 
       let html = '';
-      for (const job of filtered) {
-        const status = {
-          'not_started': { text: 'Not Started', color: 'bg-zinc-700 text-zinc-300' },
-          'in_progress': { text: 'In Progress', color: 'bg-yellow-600 text-yellow-100' },
-          'completed': { text: 'Completed', color: 'bg-green-600 text-white' }
-        }[job.status || 'not_started'];
-
-        let scheduledInfo = '';
-        if (job.scheduled_date && job.status === 'in_progress') {
-          const d = new Date(job.scheduled_date);
-          scheduledInfo = `<div class="mt-2 text-xs text-green-400">📅 ${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>`;
-        }
-
-        let photoThumbnails = '';
-        try {
-          const { data: files } = await supabaseClient.storage.from('job-photos').list(`${job.id}/`, { limit: 3 });
-          if (files?.length) {
-            photoThumbnails = `<div class="flex gap-2 mt-4">`;
-            for (const f of files) {
-              const url = supabaseClient.storage.from('job-photos').getPublicUrl(`${job.id}/${f.name}`).data.publicUrl;
-              photoThumbnails += `<img src="${url}" class="thumbnail w-16 h-16 object-cover rounded-xl border border-zinc-600 flex-shrink-0">`;
-            }
-            photoThumbnails += `</div>`;
-          }
-        } catch(e){}
-
+      jobs.forEach(job => {
+        const time = new Date(job.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         html += `
           <div onclick="editJob('${job.id}')" class="job-card bg-zinc-800 rounded-3xl p-6">
             <div class="flex justify-between items-start">
               <div>
-                <div class="font-semibold text-lg">${job.customer_name || 'No Name'}</div>
-                <div class="text-sm text-zinc-400">${job.customer_phone || ''}</div>
+                <div class="font-semibold">${job.customer_name || 'No Name'}</div>
+                <div class="text-sm text-zinc-400">${job.equipment_type || ''}</div>
               </div>
               <div class="text-right">
-                <span class="px-4 py-1 text-xs rounded-2xl ${status.color}">${status.text}</span>
-                <div class="text-green-400 font-bold text-2xl mt-2">$${job.total_cost || 0}</div>
+                <div class="text-green-400 font-bold text-xl">$${job.total_cost || 0}</div>
+                <div class="text-xs text-zinc-400 mt-1">${time}</div>
               </div>
             </div>
-            <div class="mt-4 text-sm text-zinc-400">
-              ${job.equipment_type || ''} • ${new Date(job.created_at).toLocaleDateString()}
-            </div>
-            ${scheduledInfo}
-            ${photoThumbnails}
           </div>`;
-      }
-      container.innerHTML = html;
-    }
+      });
 
-    // ==================== EDIT JOB ====================
+      container.innerHTML = html;
+    };
+
+    // Navigation Arrows - FIXED
+    document.getElementById('prev-btn').addEventListener('click', () => {
+      if (currentView === 'monthly') {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+      } else {
+        currentDate.setDate(currentDate.getDate() - 7);
+      }
+      loadSchedule();
+    });
+
+    document.getElementById('next-btn').addEventListener('click', () => {
+      if (currentView === 'monthly') {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+      } else {
+        currentDate.setDate(currentDate.getDate() + 7);
+      }
+      loadSchedule();
+    });
+
+    // Edit Modal Functions (same as saved-quotes)
     window.editJob = async (jobId) => {
       currentEditingJobId = jobId;
       uploadedFiles = [];
 
-      const { data: job } = await supabaseClient.from('job_calculations').select('*').eq('id', jobId).single();
+      const { data: job } = await supabaseClient
+        .from('job_calculations')
+        .select('*')
+        .eq('id', jobId)
+        .single();
 
       if (!job) return;
 
@@ -288,13 +379,11 @@
       document.getElementById('edit_total_cost').value = job.total_cost || '';
       document.getElementById('edit_notes').value = job.notes || '';
 
-      // Scheduled date handling
       const scheduledGroup = document.getElementById('scheduled-date-group');
       const scheduledInput = document.getElementById('edit_scheduled_date');
       scheduledGroup.classList.toggle('hidden', job.status !== 'in_progress');
       scheduledInput.value = job.scheduled_date ? new Date(job.scheduled_date).toISOString().slice(0,16) : '';
 
-      // Load existing photos
       const preview = document.getElementById('photo-preview');
       preview.innerHTML = '';
 
@@ -326,31 +415,29 @@
         <div class="relative max-w-5xl w-full">
           <button onclick="this.parentElement.parentElement.remove()" class="absolute -top-12 right-0 text-white text-4xl hover:text-red-400">×</button>
           <img src="${url}" class="max-h-[90vh] mx-auto rounded-2xl">
-        </div>
-      `;
+        </div>`;
       document.body.appendChild(viewer);
       viewer.addEventListener('click', e => { if (e.target === viewer) viewer.remove(); });
     }
 
-    // New photo upload
+    // Photo upload
     document.getElementById('photo-upload').addEventListener('change', (e) => {
       const files = Array.from(e.target.files);
       const preview = document.getElementById('photo-preview');
-
       files.forEach(file => {
         uploadedFiles.push(file);
         const reader = new FileReader();
-        reader.onload = (ev) => {
+        reader.onload = ev => {
           const div = document.createElement('div');
           div.className = "relative rounded-2xl overflow-hidden";
           div.innerHTML = `
             <img src="${ev.target.result}" class="w-full h-32 object-cover">
             <button class="absolute top-2 right-2 bg-red-600 text-white w-6 h-6 rounded-full text-xs">×</button>
           `;
-          div.querySelector('button').addEventListener('click', () => {
+          div.querySelector('button').onclick = () => {
             uploadedFiles = uploadedFiles.filter(f => f !== file);
             div.remove();
-          });
+          };
           preview.appendChild(div);
         };
         reader.readAsDataURL(file);
@@ -366,15 +453,14 @@
 
       let scheduled_date = null;
       if (status === 'in_progress') {
-        const dateStr = document.getElementById('edit_scheduled_date').value;
-        if (dateStr) scheduled_date = new Date(dateStr).toISOString();
+        const val = document.getElementById('edit_scheduled_date').value;
+        if (val) scheduled_date = new Date(val).toISOString();
       }
 
       try {
-        const updateData = { customer_name, status, total_cost, notes, scheduled_date };
         const { error } = await supabaseClient
           .from('job_calculations')
-          .update(updateData)
+          .update({ customer_name, status, total_cost, notes, scheduled_date })
           .eq('id', currentEditingJobId);
 
         if (error) throw error;
@@ -388,14 +474,14 @@
 
         document.getElementById('edit-modal').classList.add('hidden');
         uploadedFiles = [];
-        loadSavedJobs();
+        loadSchedule();
         alert("Job updated successfully!");
       } catch (err) {
         alert("Failed to save changes");
       }
     });
 
-    // **Fixed Cancel Button**
+    // Cancel
     document.getElementById('cancel-edit-btn').addEventListener('click', () => {
       document.getElementById('edit-modal').classList.add('hidden');
       uploadedFiles = [];
@@ -415,7 +501,7 @@
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) return window.location.replace('staff-login.html');
-      loadSavedJobs();
+      loadSchedule();
     }
 
     init();
